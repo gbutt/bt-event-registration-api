@@ -12,12 +12,7 @@ module.exports = {
                 trailingComma: 'none',
             },
         },
-        {
-            files: '*.cls',
-            options: {
-                printWidth: 120,
-            },
-        },
+
         {
             files: '*.css',
             options: {

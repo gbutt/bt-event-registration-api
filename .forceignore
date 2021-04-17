@@ -4,6 +4,8 @@
 
 package.xml
 
+src/hold/**
+
 # LWC configuration files
 **/jsconfig.json
 **/.eslintrc.json
