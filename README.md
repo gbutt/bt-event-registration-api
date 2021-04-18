@@ -1,6 +1,10 @@
 # Event Registration API - Code Challenge
 
 [API Specification](https://www.notion.so/Code-Challenge-Event-Registration-API-2c97572b571f4a8ca78ec6cd7c6c6322)
+[Managed Package Installation Link](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t5e000000tACbAAM)
+
+SFDX install command:
+`sfdx force:package:install --package "04t5e000000tACbAAM" --wait 10 --publishwait 10`
 
 ## Setup Instructions
 

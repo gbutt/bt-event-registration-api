@@ -4,11 +4,15 @@
     "version": "1.0.0",
     "description": "Event Registration API - Code Challenge",
     "scripts": {
+        "postinstall": "./scripts/postInstall.sh",
+        "start": "sfdx force:org:open --path=\"/lightning/o/gbutt__Event__c/list?filterName=My_Events\"",
+        "test": "sfdx force:apex:test:run -w 10 -r human -c",
+        "assign": "sfdx force:user:permset:assign --permsetname=Event_Admin_Access",
         "ping": "npm run register -- _ping",
         "register": "./scripts/testApi.sh",
-        "postinstall": "./scripts/postInstall.sh",
-        "start": "sfdx force:org:open --path=\"/lightning/o/Event__c/list?filterName=My_Events\"",
-        "test": "sfdx force:apex:test:run -w 10 -r human -c"
+        "package:create": "sfdx force:package:create --name \"Event Registration API\" --path src --packagetype Managed",
+        "package:version": "sfdx force:package:version:create --package \"Event Registration API\" --installationkeybypass --wait 10",
+        "package:install": "sfdx force:package:install --package \"Event Registration API@0.1.0-1\" --wait 10 --publishwait 10"
     },
     "devDependencies": {
         "@prettier/plugin-xml": "^0.12.0",

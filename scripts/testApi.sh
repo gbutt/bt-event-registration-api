@@ -5,9 +5,9 @@ if [[ -z $EVENT_UUID ]]; then
      EVENT_UUID='_ping'
 fi
 
-SFDC_HOST=sandbox-btdev2-developer-edition.cs95.force.com
-# NAMESPACE=/your-namespace
-NAMESPACE=''
+SFDC_HOST=sandbox-btdev3-developer-edition.cs41.force.com
+NAMESPACE=/gbutt
+# NAMESPACE=''
 URL="https://${SFDC_HOST}/services/apexrest${NAMESPACE}/events/v1/event/${EVENT_UUID}/register"
 echo posting to $URL
 curl -X POST \
