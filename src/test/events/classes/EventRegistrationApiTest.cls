@@ -312,4 +312,24 @@ public class EventRegistrationApiTest {
         // then
         System.assertEquals('123', result.eventUuid);
     }
+
+    @IsTest
+    static void buildEventRegistrationSob_should_trim_names() {
+        EventRegistrationModel payload = new EventRegistrationModel();
+        payload.firstName = 'a'.repeat(100);
+        payload.lastName = 'b'.repeat(100);
+
+        EventRegistration__c registration = EventRegistrationApi.buildEventRegistrationSob(payload);
+
+        System.assertEquals(40, registration.FirstName__c.length());
+        System.assertEquals(80, registration.LastName__c.length());
+
+        payload.firstName = 'a'.repeat(10);
+        payload.lastName = 'b'.repeat(10);
+
+        registration = EventRegistrationApi.buildEventRegistrationSob(payload);
+
+        System.assertEquals(10, registration.FirstName__c.length());
+        System.assertEquals(10, registration.LastName__c.length());
+    }
 }

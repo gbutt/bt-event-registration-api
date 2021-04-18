@@ -88,11 +88,7 @@ global with sharing class EventRegistrationApi {
     }
 
     private static EventRegistrationModel updateRegistration(String eventUuid, EventRegistrationModel payload) {
-        EventRegistration__c registrationToUpdate = new EventRegistration__c(
-            FirstName__c = payload.firstName
-            , LastName__c = payload.lastName
-            , Email__c = payload.email
-        );
+        EventRegistration__c registrationToUpdate = buildEventRegistrationSob(payload);
         if (payload.isRegistered) {
             registrationToUpdate.Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED;
         }
@@ -103,6 +99,17 @@ global with sharing class EventRegistrationApi {
         EventRegistration__c result = svc.updateRegistration(eventUuid, registrationToUpdate);
         payload.registrationNumber = result.Name;
         return payload;
+    }
+
+    @TestVisible
+    private static EventRegistration__c buildEventRegistrationSob(EventRegistrationModel payload) {
+        EventRegistration__c registration = new EventRegistration__c(
+            FirstName__c = payload.firstName.left(40)
+            , LastName__c = payload.lastName.left(80)
+            , Email__c = payload.email
+        );
+
+        return registration;
     }
 
     /**
