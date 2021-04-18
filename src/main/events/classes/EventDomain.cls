@@ -14,14 +14,14 @@ public with sharing class EventDomain extends DomainBase {
     Map<Id, Event__c> newMap;
     Map<Id, Event__c> oldMap;
 
-    EventRegistrationService eventRegistrationSvc;
+    EventRegistrationService.I eventRegistrationSvc;
 
     public EventDomain(List<Event__c> newList, Map<Id, Event__c> newMap, Map<Id, Event__c> oldMap, TriggerOperation operationType) {
         super(operationType);
         this.newList = newList;
         this.newMap = newMap;
         this.oldMap = oldMap;
-        this.eventRegistrationSvc = (EventRegistrationService)DependencyResolver.getInstance(EventRegistrationService.class);
+        this.eventRegistrationSvc = (EventRegistrationService.I)DependencyBuilder.newInstance(EventRegistrationService.class);
     }
 
     public override Boolean isDisabled() {
@@ -37,6 +37,7 @@ public with sharing class EventDomain extends DomainBase {
     }
 
     public override void afterUpdate() {
+        // mark no-shows on completed events
         List<Id> recentlyCompletedEventIds = findRecentlyCompletedEvents(this.newList, this.oldMap);
         if (recentlyCompletedEventIds.size() > 0) {
             this.eventRegistrationSvc.markUnregisteredAttendeesNoShow(recentlyCompletedEventIds);
@@ -51,25 +52,35 @@ public with sharing class EventDomain extends DomainBase {
         }
     }
 
-    private static List<Id> findRecentlyCompletedEvents(List<Event__c> newList, Map<Id, Event__c> oldMap) {
+    private List<Id> findRecentlyCompletedEvents(List<Event__c> newList, Map<Id, Event__c> oldMap) {
         List<Id> recentlyCompletedEventIds = new List<Id>();
+
         for (Event__c newEvent : newList) {
             Event__c oldEvent = oldMap.get(newEvent.Id);
-            if (isRecentlyCompleted(newEvent, oldEvent)) {
-                recentlyCompletedEventIds.add(newEvent.Id);
+
+            if (newEvent.Status__c == EventRegistrationService.EVENT_STATUS_COMPLETED) {
+                if (isRecentChange(Schema.Event__c.Status__c, newEvent, oldEvent)) {
+                    recentlyCompletedEventIds.add(newEvent.Id);
+                }
             }
         }
+
         return recentlyCompletedEventIds;
     }
 
-    private static Boolean isRecentlyCompleted(Event__c newEvent, Event__c oldEvent) {
-        Boolean isCompleted = newEvent.Status__c == EventRegistrationService.EVENT_STATUS_COMPLETED;
-        if (isCompleted == false) {
-            return false;
-        }
 
-        SObjectComparator comparator = new SObjectComparator(newEvent, oldEvent);
-        Boolean isRecentlyCompleted = comparator.hasFieldChanged(Schema.Event__c.Status__c);
-        return isRecentlyCompleted;
+    private Boolean isRecentChange(SObjectField field, Event__c newEvent, Event__c oldEvent) {
+        SObjectComparator comparator = getComparatorForEvents(newEvent, oldEvent);
+        return comparator.hasFieldChanged(field);
+    }
+
+    Map<Id, SObjectComparator> comparatorCache = new Map<Id, SObjectComparator>();
+    private SObjectComparator getComparatorForEvents(Event__c newEvent, Event__c oldEvent) {
+        SObjectComparator comparator = comparatorCache.get(newEvent.Id);
+        if (comparator == null) {
+            comparator = new SObjectComparator(newEvent, oldEvent);
+            comparatorCache.put(newEvent.Id, comparator);
+        }
+        return comparator;
     }
 }

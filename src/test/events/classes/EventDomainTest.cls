@@ -39,7 +39,7 @@ public class EventDomainTest {
     static void it_should_mark_invited_registrations_no_show_when_completed() {
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
 
         // when
         Event__c myEvent = [SELECT Id FROM Event__c];
@@ -56,7 +56,7 @@ public class EventDomainTest {
     static void it_should_not_mark_no_shows_when_event_already_completed() {
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
 
         Event__c myEvent = [SELECT Id FROM Event__c];
         myEvent.Status__c = EventRegistrationService.EVENT_STATUS_COMPLETED;

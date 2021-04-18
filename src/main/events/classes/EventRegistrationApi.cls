@@ -1,15 +1,15 @@
 /**
  * @author Greg Butt
  * @date 2021
- *
  * @group Events
- *
  * @description Public API for Event Registrations.
  * Example URL: https://sandbox-btdev-developer-edition.cs43.force.com/services/apexrest/namespace/events/v1/event
  */
 @RestResource(urlMapping ='/events/v1/event/*/register')
 global with sharing class EventRegistrationApi {
     // private static final Logger LOG = LoggerFactory.getInstance(EventRegistrationApi.class);
+
+    // package namespace
     @TestVisible
     private static final String NAMESPACE;
     private static final Pattern REGISTRATION_UUID_REGEX;
@@ -32,14 +32,13 @@ global with sharing class EventRegistrationApi {
     global static void doPost() {
         RestRequest req = RestContext.request;
         RestResponse resp = RestContext.response;
-        respPayload = new ResponsePayload();
 
         RequestParameters requestParams = new RequestParameters(req);
-        respPayload.setParams(requestParams);
+        respPayload = new ResponsePayload(requestParams);
 
         try {
             // parse the payload
-            RequestPayload payload = parsePayload(req.requestBody.toString());
+            EventRegistrationModel payload = parsePayload(req.requestBody.toString());
             // validate the payload
             List<String> errors = payload.validate();
             if (errors.isEmpty() == false) {
@@ -48,13 +47,13 @@ global with sharing class EventRegistrationApi {
 
             String registrationNumber;
             if (requestParams.eventUuid == '_ping') {
-                // check for ping
-                registrationNumber = 'test-uuid-ping';
+                // return pong
+                payload.registrationNumber = 'test-uuid-ping';
             } else {
                 // complete registration
-                registrationNumber = updateRegistration(requestParams.eventUuid, payload);
+                payload = updateRegistration(requestParams.eventUuid, payload);
             }
-            respPayload.registrationNumber = registrationNumber;
+            respPayload.registration = payload;
             resp.statusCode = 200;
         } catch (InvalidDataException ex) {
             resp.statusCode = 400;
@@ -76,10 +75,10 @@ global with sharing class EventRegistrationApi {
         resp.responseBody = Blob.valueOf(JSON.serialize(respPayload));
     }
 
-    private static RequestPayload parsePayload(String payloadJsonStr) {
-        RequestPayload payload;
+    private static EventRegistrationModel parsePayload(String payloadJsonStr) {
+        EventRegistrationModel payload;
         try {
-            payload = (RequestPayload)JSON.deserialize(payloadJsonStr, RequestPayload.class);
+            payload = (EventRegistrationModel)JSON.deserialize(payloadJsonStr, EventRegistrationModel.class);
         } catch (Exception ex) {
             // LOG.error(ex);
             System.debug(LoggingLevel.ERROR, ex);
@@ -88,23 +87,27 @@ global with sharing class EventRegistrationApi {
         return payload;
     }
 
-    private static String updateRegistration(String eventUuid, RequestPayload payload) {
+    private static EventRegistrationModel updateRegistration(String eventUuid, EventRegistrationModel payload) {
         EventRegistration__c registrationToUpdate = new EventRegistration__c(
             FirstName__c = payload.firstName
             , LastName__c = payload.lastName
             , Email__c = payload.email
         );
-
         if (payload.isRegistered) {
             registrationToUpdate.Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED;
         }
-        EventRegistrationService svc = (EventRegistrationService)DependencyResolver.getInstance(
+
+        EventRegistrationService.I svc = (EventRegistrationService.I)DependencyBuilder.newInstance(
             EventRegistrationService.class
         );
         EventRegistration__c result = svc.updateRegistration(eventUuid, registrationToUpdate);
-        return result.Name;
+        payload.registrationNumber = result.Name;
+        return payload;
     }
 
+    /**
+     * @description Error thrown when the provided input to the rest service was invalid or missing
+     */
     public class InvalidDataException extends Exception {
         public List<String> errors { get; private set; }
 
@@ -116,6 +119,9 @@ global with sharing class EventRegistrationApi {
     }
 
 
+    /**
+     * @description The provided input parameters to the rest service
+     */
     public class RequestParameters {
         public String eventUuid { get; private set; }
 
@@ -128,34 +134,27 @@ global with sharing class EventRegistrationApi {
         }
     }
 
-    global class RequestPayload {
-        global String firstName;
-        global String lastName;
-        global String email;
-        global Boolean isRegistered;
 
-        public List<String> validate() {
-            List<String> errors = new List<String>();
-            if (String.isBlank(this.firstName)) {
-                errors.add('firstName is required');
-            }
-            if (String.isBlank(this.lastName)) {
-                errors.add('lastName is required');
-            }
-            if (String.isBlank(this.email)) {
-                errors.add('email is required');
-            }
-            return errors;
-        }
-    }
-
+    /**
+     * @description The response payload
+     */
     public class ResponsePayload {
-        public RequestParameters params { get; set; }
+        /*******************************************************************************************************
+         * @description the request parameters received for this request
+         */
+        public RequestParameters params { get; private set; }
+        /*******************************************************************************************************
+         * @description a list of error messages to accompany the error status code
+         */
         public List<String> errors { get; set; }
-        public String registrationNumber { get; set; }
+        /*******************************************************************************************************
+         * @description the registration data of a successfully registered registrant
+         */
+        public EventRegistrationModel registration { get; set; }
 
-        public void setParams(RequestParameters requestParams) {
-            this.params = requestParams;
+        public ResponsePayload(RequestParameters params) {
+            this.params = params;
+            this.errors = new List<String>();
         }
     }
 }

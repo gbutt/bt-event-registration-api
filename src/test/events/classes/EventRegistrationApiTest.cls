@@ -25,7 +25,7 @@ public class EventRegistrationApiTest {
 
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
 
         // return registration when load by email is called
         EventRegistration__c registration = buildRegistration();
@@ -40,7 +40,7 @@ public class EventRegistrationApiTest {
         setUriNamespace(RestContext.request);
 
         // given - valid payload
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        EventRegistrationModel payload = new EventRegistrationModel();
         payload.firstName = 'Chuck';
         payload.lastName = 'Jones';
         payload.email = 'chuck.jones@looneytunes.co';
@@ -66,7 +66,7 @@ public class EventRegistrationApiTest {
         String respBodyStr = RestContext.response.responseBody.toString();
         EventRegistrationApi.ResponsePayload response = EventRegistrationApi.respPayload;
         System.assertEquals(JSON.serialize(response), respBodyStr);
-        System.assertEquals(REGISTRATION_NUMBER, response.registrationNumber, response);
+        System.assertEquals(REGISTRATION_NUMBER, response.registration.registrationNumber, response);
     }
 
     @IsTest
@@ -113,7 +113,7 @@ public class EventRegistrationApiTest {
         setUriNamespace(RestContext.request);
 
         // given - invalid payload
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        EventRegistrationModel payload = new EventRegistrationModel();
         System.assertEquals(false, payload.validate().isEmpty());
         RestContext.request.requestBody = Blob.valueOf(JSON.serialize(payload));
 
@@ -138,7 +138,7 @@ public class EventRegistrationApiTest {
 
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
         // return registration id when register is called
         stubSvc.when('fetchRegistrationsByEmail').thenReturn(new List<EventRegistration__c>());
 
@@ -150,7 +150,7 @@ public class EventRegistrationApiTest {
         setUriNamespace(RestContext.request);
 
         // given - valid payload
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        EventRegistrationModel payload = new EventRegistrationModel();
         payload.firstName = 'Chuck';
         payload.lastName = 'Jones';
         payload.email = 'chuck.jones@looneytunes.co';
@@ -168,8 +168,8 @@ public class EventRegistrationApiTest {
             respBodyStr,
             EventRegistrationApi.ResponsePayload.class
         );
-        System.assertEquals(null, response.errors);
-        System.assertEquals('test-uuid-ping', response.registrationNumber);
+        System.assertEquals(true, response.errors.isEmpty());
+        System.assertEquals('test-uuid-ping', response.registration.registrationNumber);
     }
 
     @IsTest
@@ -180,7 +180,7 @@ public class EventRegistrationApiTest {
 
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
         // return registration id when register is called
         stubSvc.when('updateRegistration').thenThrow(new EventRegistrationService.RegistrationNotFoundException());
 
@@ -192,7 +192,7 @@ public class EventRegistrationApiTest {
         setUriNamespace(RestContext.request);
 
         // given - valid payload
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        EventRegistrationModel payload = new EventRegistrationModel();
         payload.firstName = 'Chuck';
         payload.lastName = 'Jones';
         payload.email = 'chuck.jones@looneytunes.co';
@@ -221,7 +221,7 @@ public class EventRegistrationApiTest {
 
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
         // return registration id when register is called
         EventRegistration__c registration = new EventRegistration__c(Event__r = new Event__c(Status__c = EventRegistrationService.EVENT_STATUS_CLOSED));
         stubSvc.when('updateRegistration').thenThrow(new EventRegistrationService.RegistrationNotAllowedException());
@@ -234,7 +234,7 @@ public class EventRegistrationApiTest {
         setUriNamespace(RestContext.request);
 
         // given - valid payload
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        EventRegistrationModel payload = new EventRegistrationModel();
         payload.firstName = 'Chuck';
         payload.lastName = 'Jones';
         payload.email = 'chuck.jones@looneytunes.co';
@@ -265,7 +265,7 @@ public class EventRegistrationApiTest {
 
         // setup - create a stub for service class
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
-        DependencyResolver.mockInstance(stubSvc);
+        DependencyBuilder.cacheInstance(EventRegistrationService.class, stubSvc.createStub());
         // return registration id when register is called
         stubSvc.when('fetchRegistrationsByEmail').thenThrow(new GeneralException('panic!'));
 
@@ -277,7 +277,7 @@ public class EventRegistrationApiTest {
         setUriNamespace(RestContext.request);
 
         // given - valid payload
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        EventRegistrationModel payload = new EventRegistrationModel();
         payload.firstName = 'Chuck';
         payload.lastName = 'Jones';
         payload.email = 'chuck.jones@looneytunes.co';
@@ -311,101 +311,5 @@ public class EventRegistrationApiTest {
 
         // then
         System.assertEquals('123', result.eventUuid);
-    }
-
-    @IsTest
-    static void it_should_validate_payload_firstName() {
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
-
-        // when
-        List<String> errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('firstName is required') > -1);
-
-        // when
-        payload.firstName = '';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('firstName is required') > -1);
-
-        // when
-        payload.firstName = ' ';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('firstName is required') > -1);
-
-        // when
-        payload.firstName = 'test';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(-1, errors.indexOf('firstName is required'));
-    }
-
-    @IsTest
-    static void it_should_validate_payload_lastName() {
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
-
-        // when
-        List<String> errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('lastName is required') > -1);
-
-        // when
-        payload.lastName = '';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('lastName is required') > -1);
-
-        // when
-        payload.lastName = ' ';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('lastName is required') > -1);
-
-        // when
-        payload.lastName = 'test';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(-1, errors.indexOf('lastName is required'));
-    }
-
-    @IsTest
-    static void it_should_validate_payload_email() {
-        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
-
-        // when
-        List<String> errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('email is required') > -1);
-
-        // when
-        payload.email = '';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('email is required') > -1);
-
-        // when
-        payload.email = ' ';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(true, errors.indexOf('email is required') > -1);
-
-        // when
-        payload.email = 'test';
-        errors = payload.validate();
-
-        // then
-        System.assertEquals(-1, errors.indexOf('email is required'));
     }
 }
