@@ -1,4 +1,4 @@
-@IsTest
+@IsTest(IsParallel = true)
 public class DependencyResolverTest {
     @IsTest
     static void it_should_resolve_new_instance() {

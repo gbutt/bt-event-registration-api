@@ -1,4 +1,4 @@
-@IsTest
+@IsTest(IsParallel = true)
 public class EventRegistrationServiceTest {
     private static final String EVENT_UUID = 'event-uuid-123';
     private static final String EMAIL = 'dolly@dollyparton.com';

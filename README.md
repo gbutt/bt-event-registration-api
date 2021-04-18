@@ -2,6 +2,9 @@
 
 ## Setup Instructions
 
+1. If you have a namespace, edit it in:
+    1. sfdx-project.json
+    1. scripts/testApi.sh
 1. Create new scratch org and push
 1. Grant yourself the Event Admin permission set: `sfdx force:user:permset:assign --permsetname=Event_Admin_Access`
 1. Open scratch org and create new public site
@@ -22,4 +25,4 @@
     1. Check registration and ensure status is changed to Registered.
 1. Change the event status to Completed
     1. All non-registered registrants should have the "No Show" flag checked.
-    1. Event stats in the highlights panel are updated to reflect totals invited/registered/no show
+    1. Event stats in the highlights panel are updated to reflect total/invited/registered/no show

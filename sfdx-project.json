@@ -5,7 +5,7 @@
             "default": true
         }
     ],
-    "namespace": "gbutt",
+    "namespace": "",
     "sfdcLoginUrl": "https://login.salesforce.com",
     "sourceApiVersion": "50.0"
 }

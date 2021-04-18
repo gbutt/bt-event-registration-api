@@ -11,6 +11,12 @@ public class EventRegistrationApiTest {
         return registration;
     }
 
+    private static void setUriNamespace(RestRequest req) {
+        if (EventRegistrationApi.NAMESPACE != null) {
+            req.requestURI = '/' + EventRegistrationApi.NAMESPACE + req.requestURI;
+        }
+    }
+
     @IsTest
     static void it_should_register_valid_payload() {
         // setup - RestContext
@@ -28,9 +34,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, EVENT_UUID }
+            '/events/v1/event/{0}/register',
+            new List<Object> { EVENT_UUID }
         );
+        setUriNamespace(RestContext.request);
 
         // given - valid payload
         EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
@@ -82,9 +89,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, EVENT_UUID }
+            '/events/v1/event/{0}/register',
+            new List<Object> { EVENT_UUID }
         );
+        setUriNamespace(RestContext.request);
 
         // given - maformed payload
         RestContext.request.requestBody = Blob.valueOf('not json');
@@ -111,9 +119,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, EVENT_UUID }
+            '/events/v1/event/{0}/register',
+            new List<Object> { EVENT_UUID }
         );
+        setUriNamespace(RestContext.request);
 
         // given - invalid payload
         EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
@@ -147,9 +156,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, '_ping' }
+            '/events/v1/event/{0}/register',
+            new List<Object> { '_ping' }
         );
+        setUriNamespace(RestContext.request);
 
         // given - valid payload
         EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
@@ -188,9 +198,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, EVENT_UUID }
+            '/events/v1/event/{0}/register',
+            new List<Object> { EVENT_UUID }
         );
+        setUriNamespace(RestContext.request);
 
         // given - valid payload
         EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
@@ -229,9 +240,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, EVENT_UUID }
+            '/events/v1/event/{0}/register',
+            new List<Object> { EVENT_UUID }
         );
+        setUriNamespace(RestContext.request);
 
         // given - valid payload
         EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
@@ -271,9 +283,10 @@ public class EventRegistrationApiTest {
 
         // given - valid request
         RestContext.request.requestURI = String.format(
-            '/{0}/events/v1/event/{1}/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE, EVENT_UUID }
+            '/events/v1/event/{0}/register',
+            new List<Object> { EVENT_UUID }
         );
+        setUriNamespace(RestContext.request);
 
         // given - valid payload
         EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
@@ -300,10 +313,8 @@ public class EventRegistrationApiTest {
         // given
 
         RestRequest req = new RestRequest();
-        req.requestURI = String.format(
-            '/{0}/events/v1/event/123/register',
-            new List<Object> { EventRegistrationApi.NAMESPACE }
-        );
+        req.requestURI = '/events/v1/event/123/register';
+        setUriNamespace(req);
 
         // when
         EventRegistrationApi.RequestParameters result = new EventRegistrationApi.RequestParameters(

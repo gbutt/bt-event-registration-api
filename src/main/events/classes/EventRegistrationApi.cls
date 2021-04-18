@@ -3,12 +3,18 @@
 global with sharing class EventRegistrationApi {
     // private static final Logger LOG = LoggerFactory.getInstance(EventRegistrationApi.class);
     @TestVisible
-    private static final String NAMESPACE = PackageUtils.getNamespaceFromClass(
-        EventRegistrationApi.class
-    );
-    private static final Pattern REGISTRATION_UUID_REGEX = Pattern.compile(
-        String.format('/{0}/events/v1/event/(.*)/register', new List<String> { NAMESPACE })
-    );
+    private static final String NAMESPACE;
+    private static final Pattern REGISTRATION_UUID_REGEX;
+
+    static {
+        NAMESPACE = PackageUtils.getNamespaceFromClass(EventRegistrationApi.class);
+
+        String regexPattern = '/events/v1/event/(.*)/register';
+        if (NAMESPACE != null) {
+            regexPattern = '/' + NAMESPACE + regexPattern;
+        }
+        REGISTRATION_UUID_REGEX = Pattern.compile(regexPattern);
+    }
 
     @TestVisible
     private static ResponsePayload respPayload { get; set; }
@@ -33,7 +39,7 @@ global with sharing class EventRegistrationApi {
             }
             // complete registration
             String registrationNumber;
-            // check for test event uuid
+            // check for ping
             if (requestParams.eventUuid == '_ping') {
                 registrationNumber = 'test-uuid-ping';
             } else {
