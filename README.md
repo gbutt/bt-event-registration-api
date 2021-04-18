@@ -1,5 +1,7 @@
 # Event Registration API - Code Challenge
 
+[API Specification](https://www.notion.so/Code-Challenge-Event-Registration-API-2c97572b571f4a8ca78ec6cd7c6c6322)
+
 ## Setup Instructions
 
 1. If you have a namespace, edit it in:
