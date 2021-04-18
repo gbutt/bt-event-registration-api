@@ -1,3 +1,11 @@
+/**
+ * @author Greg Butt
+ * @date 2021
+ *
+ * @group Core
+ *
+ * @description Base class extended by all Domain classes. See https://trailhead.salesforce.com/en/content/learn/modules/apex_patterns_dsl
+ */
 public with sharing abstract class DomainBase {
     protected TriggerOperation operationType {get; private set;}
     public DomainBase(TriggerOperation operationType) {

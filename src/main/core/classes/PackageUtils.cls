@@ -1,8 +1,11 @@
-/*
-   System.debug(PackageUtils.getNamespaceFromClass(EventRegistrationApi.class));
-   System.debug(EventRegistrationApi.class.getName());
+/**
+ * @author Greg Butt
+ * @date 2021
+ *
+ * @group Core
+ *
+ * @description Utility methods for managed packages
  */
-
 public class PackageUtils {
     // Doesn't work for inner classes. Ensuring proper usage is the responsibility of the caller.
     public static String getNamespaceFromClass(Type classType) {

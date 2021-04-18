@@ -1,3 +1,11 @@
+/**
+ * @author Greg Butt
+ * @date 2021
+ *
+ * @group Core
+ *
+ * @description Provides a simple mechanism to inject dependencies in a Unit Test
+ */
 public class DependencyResolver {
     @TestVisible
     private static Map<Type, Object> cachedDependencies { get; set; }
