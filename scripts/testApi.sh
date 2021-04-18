@@ -13,4 +13,4 @@ echo posting to $URL
 curl -X POST \
      -H "Content-Type: application/json" \
      -d '{"firstName": "Prince", "lastName": "Humperdink", "email": "phumperdink@florin.co", "isRegistered": true}' \
-     "$URL"
+     "$URL" #| jq '.'
