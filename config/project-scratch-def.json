@@ -1,18 +1,21 @@
 {
-  "orgName": "greg.butt company",
-  "edition": "Developer",
-  "features": [],
-  "settings": {
-    "lightningExperienceSettings": {
-      "enableS1DesktopEnabled": true
-    },
-    "securitySettings": {
-      "passwordPolicies": {
-        "enableSetPasswordInApi": true
-      }
-    },
-    "mobileSettings": {
-      "enableS1EncryptedStoragePref2": false
+    "orgName": "greg.butt company",
+    "edition": "Developer",
+    "features": [],
+    "settings": {
+        "lightningExperienceSettings": {
+            "enableS1DesktopEnabled": true
+        },
+        "securitySettings": {
+            "passwordPolicies": {
+                "enableSetPasswordInApi": true
+            }
+        },
+        "mobileSettings": {
+            "enableS1EncryptedStoragePref2": false
+        },
+        "pathAssistantSettings": {
+            "pathAssistantEnabled": true
+        }
     }
-  }
 }

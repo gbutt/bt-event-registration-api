@@ -134,6 +134,47 @@ public class EventRegistrationApiTest {
     }
 
     @IsTest
+    static void it_should_return_ping() {
+        // setup - RestContext
+        RestContext.request = new RestRequest();
+        RestContext.response = new RestResponse();
+
+        // setup - create a stub for service class
+        UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
+        DependencyResolver.mockInstance(stubSvc);
+        // return registration id when register is called
+        stubSvc.when('fetchRegistrationsByEmail').thenReturn(new List<EventRegistration__c>());
+
+        // given - valid request
+        RestContext.request.requestURI = String.format(
+            '/{0}/events/v1/event/{1}/register',
+            new List<Object> { EventRegistrationApi.NAMESPACE, '_ping' }
+        );
+
+        // given - valid payload
+        EventRegistrationApi.RequestPayload payload = new EventRegistrationApi.RequestPayload();
+        payload.firstName = 'Chuck';
+        payload.lastName = 'Jones';
+        payload.email = 'chuck.jones@looneytunes.co';
+        payload.isRegistered = true;
+        System.assertEquals(true, payload.validate().isEmpty(), payload.validate());
+
+        // when
+        RestContext.request.requestBody = Blob.valueOf(JSON.serialize(payload));
+        EventRegistrationApi.doPost();
+
+        // then - response has error
+        System.assertEquals(200, RestContext.response.statusCode);
+        String respBodyStr = RestContext.response.responseBody.toString();
+        EventRegistrationApi.ResponsePayload response = (EventRegistrationApi.ResponsePayload)JSON.deserialize(
+            respBodyStr,
+            EventRegistrationApi.ResponsePayload.class
+        );
+        System.assertEquals(null, response.errors);
+        System.assertEquals('test-uuid-ping', response.registrationNumber);
+    }
+
+    @IsTest
     static void it_should_return_404_error_when_registration_not_found() {
         // setup - RestContext
         RestContext.request = new RestRequest();

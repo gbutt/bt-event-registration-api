@@ -8,25 +8,29 @@ public class EventRegistrationServiceTest {
     @TestSetup
     static void makeData() {
         Event__c event = new Event__c(
-            Uuid__c = EVENT_UUID
+            Name = 'Test Event'
+            , Uuid__c = EVENT_UUID
             , Status__c = EventRegistrationService.EVENT_STATUS_OPEN
         );
         EventRegistration__c registration = new EventRegistration__c(
             FirstName__c = 'Dolly'
             , LastName__c = 'Parton'
             , Email__c = EMAIL
+            , Status__c = EventRegistrationService.REGISTRATION_STATUS_INVITED
             , Event__r = new Event__c(Uuid__c = EVENT_UUID)
         );
         EventRegistration__c registration2 = new EventRegistration__c(
             FirstName__c = 'David'
             , LastName__c = 'Attenborough'
             , Email__c = EMAIL2
+            , Status__c = EventRegistrationService.REGISTRATION_STATUS_INVITED
             , Event__r = new Event__c(Uuid__c = EVENT_UUID)
         );
         EventRegistration__c registration3 = new EventRegistration__c(
             FirstName__c = 'Morgan'
             , LastName__c = 'Freeman'
             , Email__c = EMAIL3
+            , Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED
             , Event__r = new Event__c(Uuid__c = EVENT_UUID)
         );
         insert new List<SObject> {event, registration, registration2, registration3};
@@ -46,6 +50,30 @@ public class EventRegistrationServiceTest {
         emails.sort();
         resultEmails.sort();
         System.assertEquals(emails, resultEmails, resultEmails);
+
+        System.assertNotEquals(null, results[0].Id);
+        System.assertNotEquals(null, results[0].Name);
+        System.assertNotEquals(null, results[0].Email__c);
+        System.assertNotEquals(null, results[0].FirstName__c);
+        System.assertNotEquals(null, results[0].LastName__c);
+        System.assertNotEquals(null, results[0].Status__c);
+        System.assertNotEquals(null, results[0].Event__r.Status__c);
+        System.assertNotEquals(null, results[0].Event__r.Uuid__c);
+    }
+
+    @IsTest
+    static void fetchRegistrationsByStatusNotIn_should_fetch_event_registrations_by_status() {
+        Event__c myEvent = [SELECT Id FROM Event__c];
+        EventRegistrationService svc = new EventRegistrationService();
+        List<String> statuses = new List<String> {EventRegistrationService.REGISTRATION_STATUS_REGISTERED};
+        List<EventRegistration__c> results = svc.fetchRegistrationsByStatusNotIn(new List<Id> {myEvent.Id}, statuses);
+        System.assertEquals(2, results.size());
+        // List<String> resultStatuses = (List<String>)SListApi.fromList(results).pluck('Status__c').toList(new List<String>());
+        Set<String> resultStatuses = new Set<String>();
+        for (EventRegistration__c result : results) {
+            resultStatuses.add(result.Status__c);
+        }
+        System.assertNotEquals(true, resultStatuses.contains(EventRegistrationService.REGISTRATION_STATUS_REGISTERED), resultStatuses);
 
         System.assertNotEquals(null, results[0].Id);
         System.assertNotEquals(null, results[0].Name);
