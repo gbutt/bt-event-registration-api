@@ -1,4 +1,12 @@
-// https://sandbox-btdev-developer-edition.cs43.force.com/services/apexrest/gbutt/events/v1/event
+/**
+ * @author Greg Butt
+ * @date 2021
+ *
+ * @group Events
+ *
+ * @description Public API for Event Registrations.
+ * Example URL: https://sandbox-btdev-developer-edition.cs43.force.com/services/apexrest/namespace/events/v1/event
+ */
 @RestResource(urlMapping ='/events/v1/event/*/register')
 global with sharing class EventRegistrationApi {
     // private static final Logger LOG = LoggerFactory.getInstance(EventRegistrationApi.class);
@@ -19,7 +27,7 @@ global with sharing class EventRegistrationApi {
     @TestVisible
     private static ResponsePayload respPayload { get; set; }
 
-    // create a new registration
+    // update registration
     @HttpPost
     global static void doPost() {
         RestRequest req = RestContext.request;
@@ -37,12 +45,13 @@ global with sharing class EventRegistrationApi {
             if (errors.isEmpty() == false) {
                 throw new InvalidDataException(errors);
             }
-            // complete registration
+
             String registrationNumber;
-            // check for ping
             if (requestParams.eventUuid == '_ping') {
+                // check for ping
                 registrationNumber = 'test-uuid-ping';
             } else {
+                // complete registration
                 registrationNumber = updateRegistration(requestParams.eventUuid, payload);
             }
             respPayload.registrationNumber = registrationNumber;
@@ -50,10 +59,10 @@ global with sharing class EventRegistrationApi {
         } catch (InvalidDataException ex) {
             resp.statusCode = 400;
             respPayload.errors = ex.errors;
-        } catch (RegistrationNotAllowedException ex) {
+        } catch (EventRegistrationService.RegistrationNotAllowedException ex) {
             resp.statusCode = 405;
             respPayload.errors = new List<String> { 'Event registration is not open' };
-        } catch (RegistrationNotFoundException ex) {
+        } catch (EventRegistrationService.RegistrationNotFoundException ex) {
             resp.statusCode = 404;
             respPayload.errors = new List<String> { 'Registration not found' };
         } catch (Exception ex) {
@@ -80,37 +89,20 @@ global with sharing class EventRegistrationApi {
     }
 
     private static String updateRegistration(String eventUuid, RequestPayload payload) {
-        EventRegistrationService svc = (EventRegistrationService)DependencyResolver.getInstance(
-            EventRegistrationService.class
-        );
-        List<EventRegistration__c> foundRegistrations = svc.fetchRegistrationsByEmail(
-            eventUuid,
-            new List<String> {payload.email}
-        );
-        if (foundRegistrations.size() == 0) {
-            throw new RegistrationNotFoundException();
-        }
-        EventRegistration__c registration = foundRegistrations[0];
-        if (registration.Event__r.Status__c != EventRegistrationService.EVENT_STATUS_OPEN) {
-            throw new RegistrationNotAllowedException();
-        }
-
         EventRegistration__c registrationToUpdate = new EventRegistration__c(
-            Id = registration.Id
-            , FirstName__c = payload.firstName
+            FirstName__c = payload.firstName
             , LastName__c = payload.lastName
+            , Email__c = payload.email
         );
 
         if (payload.isRegistered) {
             registrationToUpdate.Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED;
         }
-        List<SObjectField> fieldsToUpdate = new List<SObjectField> {
-            Schema.EventRegistration__c.FirstName__c
-            , Schema.EventRegistration__c.LastName__c
-            , Schema.EventRegistration__c.Status__c
-        };
-        svc.updateRegistrations(new List<EventRegistration__c> {registrationToUpdate}, fieldsToUpdate);
-        return registration.Name;
+        EventRegistrationService svc = (EventRegistrationService)DependencyResolver.getInstance(
+            EventRegistrationService.class
+        );
+        EventRegistration__c result = svc.updateRegistration(eventUuid, registrationToUpdate);
+        return result.Name;
     }
 
     public class InvalidDataException extends Exception {
@@ -123,10 +115,6 @@ global with sharing class EventRegistrationApi {
         }
     }
 
-    public class RegistrationNotAllowedException extends Exception {
-    }
-    public class RegistrationNotFoundException extends Exception {
-    }
 
     public class RequestParameters {
         public String eventUuid { get; private set; }

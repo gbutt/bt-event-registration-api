@@ -37,10 +37,186 @@ public class EventRegistrationServiceTest {
     }
 
     @IsTest
+    static void updateRegistration_should_update_registration() {
+        EventRegistration__c registrationTemplate = new EventRegistration__c(
+            FirstName__c = 'Dolly2'
+            , LastName__c = 'Parton2'
+            , Email__c = EMAIL
+            , Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED
+        );
+
+        // when
+        EventRegistrationService svc = new EventRegistrationService();
+        EventRegistration__c result = svc.updateRegistration(EVENT_UUID, registrationTemplate);
+
+        // then
+        System.assertNotEquals(null, result);
+        System.assertNotEquals(null, result.Name);
+
+        result = [SELECT FirstName__c, LastName__c, Status__c FROM EventRegistration__c WHERE Id = :result.Id];
+        System.assertEquals('Dolly2', result.FirstName__c);
+        System.assertEquals('Parton2', result.LastName__c);
+        System.assertEquals(EventRegistrationService.REGISTRATION_STATUS_REGISTERED, result.Status__c);
+    }
+
+    @IsTest
+    static void updateRegistration_should_return_error_when_event_uuid_not_provided() {
+        // given - unknown registrant
+        EventRegistration__c registrationTemplate = new EventRegistration__c(
+            Email__c = EMAIL
+        );
+
+        // when
+        EventRegistrationService svc = new EventRegistrationService();
+        Exception caught = null;
+        try {
+            svc.updateRegistration(null, registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotFoundException, caught.getTypeName());
+
+        // when
+        caught = null;
+        try {
+            svc.updateRegistration(' ', registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotFoundException, caught.getTypeName());
+    }
+
+    @IsTest
+    static void updateRegistration_should_return_error_when_email_not_provided() {
+        // given - unknown registrant
+        EventRegistration__c registrationTemplate = new EventRegistration__c(
+            Email__c = null
+        );
+
+        // when
+        EventRegistrationService svc = new EventRegistrationService();
+        Exception caught;
+        try {
+            svc.updateRegistration(EVENT_UUID, registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotFoundException, caught.getTypeName());
+
+        // when
+        registrationTemplate.Email__c = ' ';
+        caught = null;
+        try {
+            svc.updateRegistration(EVENT_UUID, registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotFoundException, caught.getTypeName());
+
+        // when
+        registrationTemplate = null;
+        caught = null;
+        try {
+            svc.updateRegistration(EVENT_UUID, registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotFoundException, caught.getTypeName());
+    }
+
+    @IsTest
+    static void updateRegistration_should_return_error_when_registration_not_found() {
+        // given - unknown registrant
+        EventRegistration__c registrationTemplate = new EventRegistration__c(
+            FirstName__c = 'Chuck'
+            , LastName__c = 'Jones'
+            , Email__c = 'chuck.jones@looneytunes.co'
+            , Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED
+        );
+
+        // when
+        EventRegistrationService svc = new EventRegistrationService();
+        Exception caught;
+        try {
+            svc.updateRegistration(EVENT_UUID, registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotFoundException, caught.getTypeName());
+    }
+
+    @IsTest
+    static void updateRegistration_should_return_error_when_event_registration_is_not_open() {
+        // given - closed event
+        Event__c myEvent = new Event__c(
+            Uuid__c = EVENT_UUID
+            , Status__c = EventRegistrationService.EVENT_STATUS_CLOSED
+        );
+        upsert myEvent Uuid__c;
+        EventRegistration__c registrationTemplate = new EventRegistration__c(
+            FirstName__c = 'Dolly'
+            , LastName__c = 'Parton'
+            , Email__c = EMAIL
+            , Status__c = EventRegistrationService.REGISTRATION_STATUS_REGISTERED
+        );
+
+        // when
+        EventRegistrationService svc = new EventRegistrationService();
+        Exception caught;
+        try {
+            svc.updateRegistration(EVENT_UUID, registrationTemplate);
+        } catch (Exception ex) {
+            caught = ex;
+        }
+
+        // then
+        System.assertNotEquals(null, caught);
+        System.assert(caught instanceof EventRegistrationService.RegistrationNotAllowedException, caught.getTypeName());
+    }
+
+    @IsTest
+    static void markUnregisteredAttendeesNoShow_should_mark_unregistered_registrations_as_no_show() {
+        Event__c myEvent = [SELECT Id FROM Event__c];
+
+        // when
+        EventRegistrationService svc = new EventRegistrationService();
+        svc.markUnregisteredAttendeesNoShow(new List<Id> {myEvent.Id});
+
+        List<EventRegistration__c> results = [
+            SELECT Id
+            , IsNoShow__c
+            FROM EventRegistration__c
+            WHERE Status__c = :EventRegistrationService.REGISTRATION_STATUS_INVITED
+        ];
+        System.assertEquals(2, results.size());
+        for (EventRegistration__c result : results) {
+            System.assertEquals(true, result.IsNoShow__c);
+        }
+    }
+
+    @IsTest
     static void fetchRegistrationsByEmail_should_fetch_event_registrations_by_email() {
         EventRegistrationService svc = new EventRegistrationService();
         List<String> emails = new List<String> {EMAIL, EMAIL2};
-        List<EventRegistration__c> results = svc.fetchRegistrationsByEmail(EVENT_UUID, emails);
+        List<EventRegistration__c> results = svc.fetchRegistrationsByEmail(new List<String> {EVENT_UUID}, emails);
         System.assertEquals(2, results.size());
         // List<String> resultEmails = (List<String>)SListApi.fromList(results).pluck('Email__c').toList(new List<String>());
         List<String> resultEmails = new List<String>();

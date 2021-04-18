@@ -30,7 +30,7 @@ public class EventRegistrationApiTest {
         // return registration when load by email is called
         EventRegistration__c registration = buildRegistration();
         System.assertEquals(REGISTRATION_NUMBER, registration.Name);
-        stubSvc.when('fetchRegistrationsByEmail').thenReturn(new List<EventRegistration__c> {registration});
+        stubSvc.when('updateRegistration').thenReturn(registration);
 
         // given - valid request
         RestContext.request.requestURI = String.format(
@@ -52,26 +52,14 @@ public class EventRegistrationApiTest {
         EventRegistrationApi.doPost();
 
         // then - service is called with correct parameters
-        stubSvc.assertThat().method('fetchRegistrationsByEmail').wasCalledExactly(1);
-        Map<String, Object> params = stubSvc.forMethod('fetchRegistrationsByEmail').getArgumentsMap();
+        stubSvc.assertThat().method('updateRegistration').wasCalledExactly(1);
+        Map<String, Object> params = stubSvc.forMethod('updateRegistration').getArgumentsMap();
         System.assertEquals(EVENT_UUID, (String)params.get('eventuuid'), params);
-        System.assertEquals(payload.email, ((List<String>)params.get('emails'))[0], params);
-
-        stubSvc.assertThat().method('updateRegistrations').wasCalledExactly(1);
-        params = stubSvc.forMethod('updateRegistrations').getArgumentsMap();
-        EventRegistration__c regToUpdate = ((List<EventRegistration__c>)params.get('registrations'))[0];
-
-        System.assertEquals(registration.Id, regToUpdate.Id);
-        System.assertEquals(payload.firstName, regToUpdate.FirstName__c);
-        System.assertEquals(payload.lastName, regToUpdate.LastName__c);
-        System.assertEquals(EventRegistrationService.REGISTRATION_STATUS_REGISTERED, regToUpdate.Status__c);
-        List<SObjectField> fieldsToUpdate = (List<SObjectField>)params.get('fieldstoupdate');
-        List<SObjectField> expectedFieldsToUpdate = new List<SObjectField> {
-            Schema.EventRegistration__c.FirstName__c
-            , Schema.EventRegistration__c.LastName__c
-            , Schema.EventRegistration__c.Status__c
-        };
-        System.assertEquals(expectedFieldsToUpdate, fieldsToUpdate);
+        EventRegistration__c registrationTemplate = (EventRegistration__c)params.get('registrationtemplate');
+        System.assertEquals(payload.email, registrationTemplate.Email__c, registrationTemplate);
+        System.assertEquals(payload.firstName, registrationTemplate.FirstName__c, registrationTemplate);
+        System.assertEquals(payload.lastName, registrationTemplate.LastName__c, registrationTemplate);
+        System.assertEquals(EventRegistrationService.REGISTRATION_STATUS_REGISTERED, registrationTemplate.Status__c, registrationTemplate);
 
         // then - response has registrastion number
         System.assertEquals(200, RestContext.response.statusCode);
@@ -194,7 +182,7 @@ public class EventRegistrationApiTest {
         UniversalMocker stubSvc = UniversalMocker.mock(EventRegistrationService.class);
         DependencyResolver.mockInstance(stubSvc);
         // return registration id when register is called
-        stubSvc.when('fetchRegistrationsByEmail').thenReturn(new List<EventRegistration__c>());
+        stubSvc.when('updateRegistration').thenThrow(new EventRegistrationService.RegistrationNotFoundException());
 
         // given - valid request
         RestContext.request.requestURI = String.format(
@@ -236,7 +224,7 @@ public class EventRegistrationApiTest {
         DependencyResolver.mockInstance(stubSvc);
         // return registration id when register is called
         EventRegistration__c registration = new EventRegistration__c(Event__r = new Event__c(Status__c = EventRegistrationService.EVENT_STATUS_CLOSED));
-        stubSvc.when('fetchRegistrationsByEmail').thenReturn(new List<EventRegistration__c> {registration});
+        stubSvc.when('updateRegistration').thenThrow(new EventRegistrationService.RegistrationNotAllowedException());
 
         // given - valid request
         RestContext.request.requestURI = String.format(
@@ -266,7 +254,7 @@ public class EventRegistrationApiTest {
         );
         System.assertEquals('Event registration is not open', response.errors[0]);
 
-        stubSvc.assertThat().method('fetchRegistrationsByEmail').wasCalledExactly(1);
+        stubSvc.assertThat().method('updateRegistration').wasCalledExactly(1);
     }
 
     @IsTest
