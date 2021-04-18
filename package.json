@@ -1,5 +1,5 @@
 {
-    "name": "event-registration-api",
+    "name": "bt-event-registration-api",
     "private": true,
     "version": "1.0.0",
     "description": "Event Registration Api - Code Challenge",
