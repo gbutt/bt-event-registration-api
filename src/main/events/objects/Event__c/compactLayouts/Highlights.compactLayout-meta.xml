@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Highlights</fullName>
+    <fields>Name</fields>
+    <fields>UUID__c</fields>
+    <fields>Total_Registrants__c</fields>
+    <fields>Invited_Registrants__c</fields>
+    <fields>Registered_Registrants__c</fields>
+    <fields>No_Shows__c</fields>
+    <label>Highlights</label>
+</CompactLayout>
